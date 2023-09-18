@@ -1,15 +1,15 @@
-import { Route, Routes } from "react-router-dom";
+import { Switch, Route } from "react-router-dom";
 import { Home } from "../pages/Home";
 import { Login } from "../pages/Login";
-import { PrivateRouter } from "./PrivateRouter";
+import PrivateRoutes from "./PrivateRoutes";
 
 
 
 export const RoutesApp = () => {
     return (
-        <Routes>
-            <Route path="/" element={<PrivateRouter><Home /></PrivateRouter>} />
-            <Route path="/login" element={<Login />} />
-        </Routes>
+        <Switch >
+            <Route path="/login" component={Login} />
+            <PrivateRoutes path="/" component={Home} />
+        </Switch >
     )
 }

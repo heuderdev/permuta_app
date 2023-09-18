@@ -1,59 +1,76 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
+import { useCookies } from 'react-cookie';
+
 import { api } from "../services/api";
 
 
+interface TokenState {
+    token: string;
+}
 
 interface AuthContextData {
-    signed: boolean;
+    token: TokenState;
     signIn: (user: object) => Promise<void>;
     signUp: (email: string, password: string) => Promise<any>;
     signOut: () => void;
+    userLogged(): boolean;
 }
-
-export const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export interface AuxProps {
     children: React.ReactNode
 }
 
+export const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+
 export const AuthProvider = ({ children }: AuxProps) => {
-    const [user, setUser] = useState<object | null>(null);   
-    
+    const [cookies, setCookie] = useCookies(['token', 'user']);
+    const [token, setToken] = useState<TokenState>(() => {
 
-    useEffect(() => {
-        const storagedUser = sessionStorage.getItem('@App:user');
-        const storagedToken = sessionStorage.getItem('@App:token');
-
-        if (storagedToken && storagedUser) {
-            setUser(JSON.parse(storagedUser));
-            api.defaults.headers.Authorization = `Bearer ${storagedToken}`;
+        const token = cookies.token;
+        if (token) {
+            api.defaults.headers.authorization = `Bearer ${token}`;
+            return { token };
         }
-        
-    }, []);
 
-    const signIn = async (userData: object) => {
+        return {} as TokenState;
+    });
+
+    const signIn = useCallback(async (userData: object) => {
         const response = await api.post("users/session", userData)
-        
+
         const token = response.data?.rows.token
 
+        setToken(token);
+
+        setCookie('token', token);
+        setCookie('user', JSON.stringify(response.data?.rows.user))
 
         api.defaults.headers.Authorization = `Bearer ${token}`;
 
-        sessionStorage.setItem('@App:user', JSON.stringify(response.data?.rows.user));
-        sessionStorage.setItem('@App:token', token);
-    }
+    }, [])
 
-    const signUp = async (email: string, password: string) => {
+    const signUp = useCallback(async (email: string, password: string) => {
         const content = await api.post("/users/session", { email, password })
         return content
-    }
+    }, [])
 
-    const signOut = () => {
-        setUser(null);
+    const signOut = useCallback(() => {
+        setToken({} as TokenState);
+    }, [])
+
+
+    const userLogged = () => {
+        const token = cookies.token;
+
+        if (token) {
+            return true;
+        }
+        return false;
     };
 
+
     return (
-        <AuthContext.Provider value={{ signed: Boolean(user), signIn, signOut, signUp }}>
+        <AuthContext.Provider value={{ token, signIn, signOut, signUp, userLogged }}>
             {children}
         </AuthContext.Provider>
     )
