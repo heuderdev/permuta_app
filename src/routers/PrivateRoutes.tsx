@@ -10,7 +10,6 @@ interface RoutesPropsData extends RouteProps {
 
 const PrivateRoutes: React.FC<RoutesPropsData> = ({ role, ...rest }) => {
     const [permissions, setPermissions] = useState([] as string[]);
-    console.log(role);
 
     useEffect(() => {
         async function loadRoles() {

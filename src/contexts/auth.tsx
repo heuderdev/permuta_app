@@ -59,14 +59,14 @@ export const AuthProvider = ({ children }: AuxProps) => {
     }, [])
 
 
-    const userLogged = () => {
+    const userLogged = useCallback(() => {
         const token = cookies.token;
 
         if (token) {
             return true;
         }
         return false;
-    };
+    }, []);
 
 
     return (

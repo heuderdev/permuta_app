@@ -19,9 +19,7 @@ const PermissionComponent: React.FC<PermissionComponentProps> = ({ role, childre
     useEffect(() => {
         async function loadRoles() {
             const response = await api.post("/verify-token").finally(() => { setLoading(false) })
-            console.log(response.data);
             const findRole = response.data?.role?.some((r: any) => role?.split(",").includes(r.slug))
-            console.log(findRole);
             setPermissions(findRole);
         }
 
